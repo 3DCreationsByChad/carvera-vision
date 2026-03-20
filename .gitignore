@@ -1,0 +1,69 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+
+# Virtual environments
+venv/
+ENV/
+env/
+.venv/
+
+# uv
+.uv/
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+Thumbs.db
+
+# STEP/CAD files — do not commit customer parts
+*.step
+*.stp
+*.iges
+*.igs
+*.f3d
+*.f3z
+
+# Logs
+*.log
+logs/
+
+# Local config
+.env
+.env.local
+
+# Temp
+tmp/
+temp/
+*.tmp
+*.zip
+
+# Test outputs
+test_output/
+*.test.json
+
+# MCP config (machine-specific, recreate from README snippet)
+.mcp.json
