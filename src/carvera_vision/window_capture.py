@@ -17,12 +17,25 @@ from typing import Optional
 from PIL import Image
 
 # Window title substrings to search for (case-insensitive).
-# Add aliases here as MakeraCam updates its title or if other CAM tools are added.
+# IMPORTANT: keep these specific. Short substrings like "carvera" match browser
+# tabs (e.g. a Chrome tab open to github.com/…/carvera-vision). Use the longest
+# reliable prefix of the actual desktop app title to avoid false matches.
 MAKERA_WINDOW_ALIASES = [
-    "makeracam",
-    "makera cam",
-    "carvera",       # Carvera Air software often uses this in the title
-    "makera",
+    "makeracam",      # MakeraCam standalone desktop app
+    "makera cam",     # alternate spacing variant
+    "carvera air",    # Carvera Air desktop software title prefix
+    "makera",         # fallback: matches "Makera" app window but not "carvera-vision" browser tabs
+]
+
+# Browser/web process identifiers to skip even if an alias matches.
+# Guards against future false matches on browser tabs.
+_BROWSER_SKIP_SUBSTRINGS = [
+    "chrome",
+    "firefox",
+    "edge",
+    "brave",
+    "browser",
+    "github.com",
 ]
 
 SYSTEM = platform.system()  # "Windows", "Darwin", "Linux"
@@ -103,6 +116,8 @@ def _find_window_windows() -> Optional[WindowInfo]:
                 continue
             title_lower = w.title.lower()
             if any(alias in title_lower for alias in MAKERA_WINDOW_ALIASES):
+                if any(skip in title_lower for skip in _BROWSER_SKIP_SUBSTRINGS):
+                    continue
                 # pygetwindow can return negative coords if window is off-screen
                 left = max(0, w.left)
                 top = max(0, w.top)
@@ -151,15 +166,17 @@ def _find_window_macos() -> Optional[WindowInfo]:
         i = 0
         while i + 5 < len(lines):
             title = lines[i + 1].strip()
-            if any(alias in title.lower() for alias in MAKERA_WINDOW_ALIASES):
-                try:
-                    x = int(lines[i + 2])
-                    y = int(lines[i + 3])
-                    w = int(lines[i + 4])
-                    h = int(lines[i + 5])
-                    return WindowInfo(title=title, left=x, top=y, width=w, height=h)
-                except ValueError:
-                    pass
+            title_lower = title.lower()
+            if any(alias in title_lower for alias in MAKERA_WINDOW_ALIASES):
+                if not any(skip in title_lower for skip in _BROWSER_SKIP_SUBSTRINGS):
+                    try:
+                        x = int(lines[i + 2])
+                        y = int(lines[i + 3])
+                        w = int(lines[i + 4])
+                        h = int(lines[i + 5])
+                        return WindowInfo(title=title, left=x, top=y, width=w, height=h)
+                    except ValueError:
+                        pass
             i += 6
     except Exception:
         pass
@@ -201,7 +218,10 @@ def _find_window_linux() -> Optional[WindowInfo]:
             if len(parts) < 9:
                 continue
             title = parts[8]
-            if any(alias in title.lower() for alias in MAKERA_WINDOW_ALIASES):
+            title_lower = title.lower()
+            if any(alias in title_lower for alias in MAKERA_WINDOW_ALIASES):
+                if any(skip in title_lower for skip in _BROWSER_SKIP_SUBSTRINGS):
+                    continue
                 x, y, w, h = int(parts[2]), int(parts[3]), int(parts[4]), int(parts[5])
                 return WindowInfo(title=title, left=x, top=y, width=w, height=h)
     except FileNotFoundError:

@@ -303,7 +303,15 @@ async def _tool_analyze_step(args: dict[str, Any]) -> list[types.ContentBlock]:
     _ensure_tools_loaded()
     if _tool_profiles and geom.min_internal_radius is not None:
         recs = _query_tools(_tool_profiles, min_radius=geom.min_internal_radius)
-        result["recommended_tools"] = recs[:5]
+        seen_names: set[str] = set()
+        unique_recs = []
+        for t in recs:
+            if t["name"] not in seen_names:
+                seen_names.add(t["name"])
+                unique_recs.append(t)
+                if len(unique_recs) == 5:
+                    break
+        result["recommended_tools"] = unique_recs
 
     return [types.TextContent(type="text", text=json.dumps(result, indent=2))]
 
